@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: wanderlust-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./backend/data:/docker-entrypoint-initdb.d:ro
+    environment:
+      MONGO_INITDB_DATABASE: wanderlust
+    entrypoint: [ "/docker-entrypoint-initdb.d/init-mongo.sh" ]
+
+  backend:
+    build: ./backend
+    container_name: wanderlust-backend
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+      - redis
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build: ./frontend
+    container_name: wanderlust-frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
